@@ -79,3 +79,14 @@ jobs:
             tests/**
             docs/client-api/**
             docs/dashboard-api/**
+
+      # Example 1
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v33
+
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
