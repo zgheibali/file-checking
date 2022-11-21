@@ -1,0 +1,89 @@
+service: core-mailing
+
+package:
+  individually: true
+
+custom:
+  user_pool_id: ${env:USER_POOL_ID, 'us-east-1_AWebLRzDl'}
+  prune:
+    automatic: true
+    number: 1
+  webpack:
+    webpackConfig: ./webpack.config.ts
+    includeModules:
+      forceInclude:
+        - typeorm-aurora-data-api-driver
+      forceExclude:
+        - aws-sdk
+      nodeModulesRelativeDir: '../../' # relative path to current working directory.
+    packagerOptions:
+      lockFile: "../../package-lock.json" # relative path to package-lock.json
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-prune-plugin
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${env:STAGE, 'test'}
+  region: ${env:AWS_REGION, 'us-east-1'}
+  apiGateway:
+    restApiId:
+      Fn::ImportValue: "${self:provider.stage}-ClientsAPIGateway-restApiId"
+    restApiRootResourceId:
+      Fn::ImportValue: "${self:provider.stage}-ClientsAPIGateway-rootResourceId"
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  iamManagedPolicies:
+    - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - kms:GenerateRandom
+        - rds-data:*
+        - secretsmanager:GetSecretValue
+        - events:*
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+        - cognito-idp:AdminGetUser
+        - lambda:InvokeFunction
+      Resource: "*"
+
+functions:
+  mailing-handler:
+    handler: lambdas/mailing-handler/handler.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - ${self:provider.stage}.imsi.pool.event.bridge
+            detail-type:
+              - ${self:provider.stage}-imsi-pool-warning
+      - eventBridge:
+          pattern:
+            source:
+              - ${self:provider.stage}.platform.purchases.event.bridge
+            detail-type:
+              - ${self:provider.stage}-platform-temp-suspended
+      - eventBridge:
+          pattern:
+            source:
+              - ${self:provider.stage}.platform.trial.event.bridge
+            detail-type:
+              - ${self:provider.stage}-platform-temp-suspended
+      - eventBridge:
+          pattern:
+            source:
+              - ${self:provider.stage}.monitoring.event.bridge
+            detail-type:
+              - ${self:provider.stage}-error-email-generated
+      - eventBridge:
+          pattern:
+            source:
+              - ${self:provider.stage}.cognito.event.bridge
+            detail-type:
+              - ${self:provider.stage}-dashboard-email-generated
