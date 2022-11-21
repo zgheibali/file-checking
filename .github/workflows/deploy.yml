@@ -60,10 +60,20 @@ jobs:
     uses: ./.github/workflows/analyse-services.yml
     with:
       base_sha: ${{inputs.base_sha}}
-      
+
+  general:
+    name: general
+    needs: analyse-services
+    if: "${{ needs.analyse-services.outputs.general == 'true' }}"
+    runs-on: ubuntu-latest
+    environment: ${{inputs.env_name}}
+    steps:
+      - name: run step
+        run: echo "deploying general"
+
   service1:
     name: service1
-    needs: analyse-services
+    needs: general
     if: "${{ needs.analyse-services.outputs.service1 == 'true' }}"
     runs-on: ubuntu-latest
     environment: ${{inputs.env_name}}
@@ -73,7 +83,7 @@ jobs:
 
   service2:
     name: service2
-    needs: analyse-services
+    needs: general
     if: "${{ needs.analyse-services.outputs.service2 == 'true' }}"
     runs-on: ubuntu-latest
     environment: ${{inputs.env_name}}
