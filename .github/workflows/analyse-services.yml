@@ -5,9 +5,11 @@ on:
         required: true
         type: string
     outputs:
-      general:
-        value: "${{ jobs.analyse-services.outputs.general }}"
-      connectivity:
+      service1:
+        value: "${{ jobs.analyse-services.outputs.service1 }}"
+      service2:
+        value: "${{ jobs.analyse-services.outputs.service2 }}"
+        
 jobs:
   analyse-services:
     name: analyse-services
@@ -27,9 +29,8 @@ jobs:
           base_sha: ${{ inputs.base_sha }}
           files: |
             .github/**
-            services/**
+            services/service1/**
             common/**
-            data-layer/**
             package.json
 
       - name: service2
@@ -39,7 +40,6 @@ jobs:
           base_sha: ${{ inputs.base_sha }}
           files: |
             .github/**
-            services/connectivity/**
+            services/service2/**
             common/**
-            data-layer/**
             package.json
