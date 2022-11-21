@@ -82,7 +82,7 @@ jobs:
   service1:
     name: service1
     needs: analyse-services
-    if: "${{ needs.analyse-services.outputs.service1 == 'true' }}"
+    if: "${{ needs.analyse-services.outputs.service1 == 'true' || needs.analyse-services.outputs.tests == 'true' }}"
     runs-on: ubuntu-latest
     steps:
       - name: run step
@@ -91,7 +91,7 @@ jobs:
   service2:
     name: service2
     needs: analyse-services
-    if: "${{ needs.analyse-services.outputs.service2 == 'true' }}"
+    if: "${{ needs.analyse-services.outputs.service2 == 'true' || needs.analyse-services.outputs.tests == 'true' }}"
     runs-on: ubuntu-latest
     steps:
       - name: run step

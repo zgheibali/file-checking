@@ -5,18 +5,23 @@ on:
         required: true
         type: string
     outputs:
+      general:
+        value: "${{ jobs.analyse-services.outputs.general }}"
       service1:
         value: "${{ jobs.analyse-services.outputs.service1 }}"
       service2:
         value: "${{ jobs.analyse-services.outputs.service2 }}"
-        
+      tests:
+        value: "${{ jobs.analyse-services.outputs.tests }}"    
 jobs:
   analyse-services:
     name: analyse-services
     runs-on: [ubuntu-latest]
     outputs:
+      general: "${{ steps.changes-general.outputs.any_changed }}"
       service1: "${{ steps.changes-service1.outputs.any_changed }}"
       service2: "${{ steps.changes-service2.outputs.any_changed }}"
+      tests: "${{ steps.changes-tests.outputs.any_changed }}"
     steps:
       - uses: actions/checkout@v3
         with:
@@ -63,3 +68,14 @@ jobs:
             scripts/generate-config/**
             package.json
             package-lock.json
+
+      - name: tests
+        id: changes-tests
+        uses: tj-actions/changed-files@v33
+        with:
+          base_sha: ${{ inputs.base_sha }}
+          files: |
+            .github/**
+            tests/**
+            docs/client-api/**
+            docs/dashboard-api/**
