@@ -87,4 +87,3 @@ functions:
               - ${self:provider.stage}.cognito.event.bridge
             detail-type:
               - ${self:provider.stage}-dashboard-email-generated
-# update service 1
