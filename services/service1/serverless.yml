@@ -15,7 +15,7 @@ custom:
         - typeorm-aurora-data-api-driver
       forceExclude:
         - aws-sdk
-      nodeModulesRelativeDir: "../../" # relative path to current working directory.
+      nodeModulesRelativeDir: '../../' # relative path to current working directory.
     packagerOptions:
       lockFile: "../../package-lock.json" # relative path to package-lock.json
 
@@ -87,4 +87,3 @@ functions:
               - ${self:provider.stage}.cognito.event.bridge
             detail-type:
               - ${self:provider.stage}-dashboard-email-generated
-#update service 1
