@@ -7,7 +7,6 @@ on:
 
 jobs:
   analyse-services:
-    needs: run-lint-and-prettier
     uses: ./.github/workflows/analyse-services.yml
     with:
       base_sha: ${{ github.event.pull_request.base.sha }}
