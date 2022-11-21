@@ -1,0 +1,14 @@
+name: feature ci/cd-workflow
+on:
+  push:
+    branches:
+      - feature/*
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      env_name: feature
+      base_sha: ${{ github.event.push.base.sha }}
+      drop_create_db: true

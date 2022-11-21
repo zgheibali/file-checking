@@ -1,0 +1,45 @@
+on:
+  workflow_call:
+    inputs:
+      base_sha:
+        required: true
+        type: string
+    outputs:
+      general:
+        value: "${{ jobs.analyse-services.outputs.general }}"
+      connectivity:
+jobs:
+  analyse-services:
+    name: analyse-services
+    runs-on: [ubuntu-latest]
+    outputs:
+      service1: "${{ steps.changes-service1.outputs.any_changed }}"
+      service2: "${{ steps.changes-service2.outputs.any_changed }}"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: service1
+        id: changes-service1
+        uses: tj-actions/changed-files@v33
+        with:
+          base_sha: ${{ inputs.base_sha }}
+          files: |
+            .github/**
+            services/**
+            common/**
+            data-layer/**
+            package.json
+
+      - name: service2
+        id: changes-service2
+        uses: tj-actions/changed-files@v33
+        with:
+          base_sha: ${{ inputs.base_sha }}
+          files: |
+            .github/**
+            services/connectivity/**
+            common/**
+            data-layer/**
+            package.json

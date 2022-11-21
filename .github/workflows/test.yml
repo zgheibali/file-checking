@@ -1,0 +1,121 @@
+name: test ci/cd-workflow
+
+on:
+  pull_request:
+    branches:
+      - master
+
+env:
+  AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT_NUMBER }}
+  STAGE: ${{secrets.STAGE}}
+  REGION: us-east-1
+  PROVCON: ${{secrets.PROVCON}}
+  USER_POOL_ID: ${{secrets.TEST_USER_POOL_ID}}
+  DASHBOARD_USER_POOL_ID: ${{secrets.TEST_DASHBOARD_USER_POOL_ID}}
+  db_env: local
+  db_name: ${{secrets.TEST_DB_NAME}}
+  aws_secret_store_arn: ${{secrets.TEST_AWS_SECRET_STORE_ARN}}
+  db_cluster_arn: ${{secrets.TEST_DB_CLUSTER_ARN}}
+  secret_stripe_key: ${{secrets.TEST_SECRET_STRIPE_KEY}}
+  MNO_URL: ${{ secrets.TEST_MNO_URL }}
+  DISTRIBUTOR_ID: ${{ secrets.TEST_DISTRIBUTOR_ID }}
+  INVENTORY_ID: ${{ secrets.TEST_INVENTORY_ID }}
+  API_KEY: ${{ secrets.TEST_API_KEY }}
+  AUTH: ${{ secrets.TEST_AUTH }}
+  ICCID_QUEUE_URL: ${{secrets.TEST_ICCID_QUEUE_URL}}
+  auto_refill_bucket_name: ${{secrets.TEST_AUTO_REFILL_BUCKET_NAME}}
+  minimum_batch_esim_count: ${{secrets.TEST_MINIMUM_BATCH_ESIM_COUNT}}
+  XRAY_WRAPPER_FLAG: ${{secrets.TEST_XRAY_WRAPPER_FLAG}}
+  DEVICE_INFO_API_KEY_SECRET_NAME: ${{secrets.DEVICE_INFO_API_KEY_SECRET_NAME}}
+  BEE_API_ID: ${{secrets.TEST_BEE_API_ID}}
+  DASHBOARD_API_ID: ${{secrets.TEST_DASHBOARD_API_ID}}
+  USERPOOL_API_ID: ${{secrets.TEST_USERPOOL_API_ID}}
+  CONSUMPTIONS_BUCKET: ${{secrets.TEST_CONSUMPTIONS_BUCKET}}
+  RSP_URL: ${{secrets.TEST_RSP_URL}}
+  RSP_FRI: ${{secrets.TEST_RSP_FRI}}
+  RSP_SECRET: ${{secrets.TEST_RSP_SECRET}}
+  SENDGRID_KEY: ${{ secrets.SENDGRID_KEY }}
+  UNWIRED_LABS_SECRET_NAME: ${{secrets.TEST_UNWIRED_LABS_SECRET_NAME}}
+  UNWIRED_LABS_BASE_URL: ${{secrets.TEST_UNWIRED_LABS_BASE_URL}}
+  SVIX_API_KEY: ${{secrets.TEST_SVIX_API_KEY}}
+  PRICE_LIST_BUCKET_NAME: ${{secrets.TEST_PRICE_LIST_BUCKET_NAME}}
+  PRICE_LIST_KEY: all-price-list-items.csv
+  IMSI_BUCKET_NAME: ${{secrets.TEST_IMSI_BUCKET_NAME}}
+  STOCK_FOLDER_NAME: stock
+  ONLINE_FOLDER_NAME: online
+  LOADED_FOLDER_NAME: loaded
+  MONITORING_ENABLED: ${{secrets.TEST_MONITORING_ENABLED}}
+  QR_CODE_LOGOS_BUCKET: ${{secrets.TEST_QR_CODE_LOGOS_BUCKET}}
+  CDR_RECEIVING_BUCKET_NAME: ${{secrets.TEST_CDR_RECEIVING_BUCKET_NAME}}
+  EXISTING_S3_BUCKET: true
+  LOCATION_BUCKET_REGION: ${{secrets.TEST_LOCATION_BUCKET_REGION}}
+  CONSUMPTION_CHECK_ENABLED: ${{secrets.TEST_CONSUMPTION_CHECK_ENABLED}}
+  CONNECTIVITY_SCHEDULER_ENABLED: ${{secrets.TEST_CONNECTIVITY_SCHEDULER_ENABLED}}
+
+jobs:
+  run-lint-and-prettier:
+    name: run-lint-and-prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
+          persist-credentials: false
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: "${{ secrets.SSH_PRIVATE_KEY }}"
+      - name: Setup Node.js for use with actions
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - name: Cache node modules
+        id: cache-primes
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          # caching node_modules
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+      - name: Install global dependencies
+        run: |
+          npm i -g npm@8.5.4
+      - name: Install dependencies
+        if: steps.cache-nodemodules.outputs.cache-hit != 'true'
+        run: |
+          npm install
+          cd apis/partners-admins
+          npm install
+      - name: Generate configurations
+        run: |
+          npm run generate:config
+          npm run generate:config:db:aurora
+          npm run generate:config:db:mysql
+          npm run generate:config:db:env
+          npm run config --workspaces --if-present
+      - name: Generate OpenAPI tests config
+        run: npm run generate:test:config:partners
+      - name: Generate offline OpenAPI spec
+        run: npm run openapi:test:partners
+
+      - name: Lint The Code Base
+        run: npm run lint
+      - name: Type Check The Code Base
+        run: tsc --noEmit
+      - name: Format The Code Base
+        uses: creyD/prettier_action@v4.2
+        with:
+          # This part is also where you can pass other options, for example:
+          prettier_options: --write **/*.{ts,js,md,json,yml,yaml}
+          only_changed: True
+          commit_message: "Prettified Code! - [skip ci]"
+          # Set your custom token
+          github_token: ${{ secrets.PRETTIER_ACCESS_TOKEN }}
+
+  analyse-services:
+    needs: run-lint-and-prettier
+    uses: ./.github/workflows/analyse-services.yml
+    with:
+      base_sha: ${{ github.event.pull_request.base.sha }}
