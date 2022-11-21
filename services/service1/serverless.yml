@@ -15,7 +15,7 @@ custom:
         - typeorm-aurora-data-api-driver
       forceExclude:
         - aws-sdk
-      nodeModulesRelativeDir: '../../' # relative path to current working directory.
+      nodeModulesRelativeDir: "../../" # relative path to current working directory.
     packagerOptions:
       lockFile: "../../package-lock.json" # relative path to package-lock.json
 
