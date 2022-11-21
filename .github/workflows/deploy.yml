@@ -1,65 +1,30 @@
 on:
   workflow_call:
     inputs:
-      env_name:
-        type: string
-        required: true
       base_sha:
         type: string
         required: true
-      drop_create_db:
-        type: boolean
-        default: false
-
-env:
-  AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT_NUMBER }}
-  STAGE: ${{secrets.STAGE}}
-  REGION: us-east-1
-  PROVCON: ${{secrets.PROVCON}}
-  USER_POOL_ID: ${{secrets.USER_POOL_ID}}
-  DASHBOARD_USER_POOL_ID: ${{secrets.DASHBOARD_USER_POOL_ID}}
-  db_env: ${{secrets.DB_ENV}}
-  db_name: ${{secrets.DB_NAME}}
-  aws_secret_store_arn: ${{secrets.AWS_SECRET_STORE_ARN}}
-  db_cluster_arn: ${{secrets.DB_CLUSTER_ARN}}
-  secret_stripe_key: ${{secrets.SECRET_STRIPE_KEY}}
-  MNO_URL: ${{ secrets.MNO_URL }}
-  DISTRIBUTOR_ID: ${{ secrets.DISTRIBUTOR_ID }}
-  INVENTORY_ID: ${{ secrets.INVENTORY_ID }}
-  API_KEY: ${{ secrets.API_KEY }}
-  AUTH: ${{ secrets.AUTH }}
-  ICCID_QUEUE_URL: ${{secrets.ICCID_QUEUE_URL}}
-  auto_refill_bucket_name: ${{secrets.AUTO_REFILL_BUCKET_NAME}}
-  minimum_batch_esim_count: ${{secrets.MINIMUM_BATCH_ESIM_COUNT}}
-  XRAY_WRAPPER_FLAG: ${{secrets.XRAY_WRAPPER_FLAG}}
-  DEVICE_INFO_API_KEY_SECRET_NAME: ${{secrets.DEVICE_INFO_API_KEY_SECRET_NAME}}
-  BEE_API_ID: ${{secrets.BEE_API_ID}}
-  DASHBOARD_API_ID: ${{secrets.DASHBOARD_API_ID}}
-  USERPOOL_API_ID: ${{secrets.USERPOOL_API_ID}}
-  CONSUMPTIONS_BUCKET: ${{secrets.CONSUMPTIONS_BUCKET}}
-  RSP_URL: ${{secrets.RSP_URL}}
-  RSP_FRI: ${{secrets.RSP_FRI}}
-  RSP_SECRET: ${{secrets.RSP_SECRET}}
-  SENDGRID_KEY: ${{ secrets.SENDGRID_KEY }}
-  UNWIRED_LABS_SECRET_NAME: ${{secrets.UNWIRED_LABS_SECRET_NAME}}
-  UNWIRED_LABS_BASE_URL: ${{secrets.UNWIRED_LABS_BASE_URL}}
-  SVIX_API_KEY: ${{secrets.SVIX_API_KEY}}
-  PRICE_LIST_BUCKET_NAME: ${{secrets.PRICE_LIST_BUCKET_NAME}}
-  PRICE_LIST_KEY: all-price-list-items.csv
-  IMSI_BUCKET_NAME: ${{secrets.IMSI_BUCKET_NAME}}
-  STOCK_FOLDER_NAME: stock
-  ONLINE_FOLDER_NAME: online
-  LOADED_FOLDER_NAME: loaded
-  MONITORING_ENABLED: ${{secrets.MONITORING_ENABLED}}
-  QR_CODE_LOGOS_BUCKET: ${{secrets.QR_CODE_LOGOS_BUCKET}}
-  CDR_RECEIVING_BUCKET_NAME: ${{secrets.CDR_RECEIVING_BUCKET_NAME}}
-  EXISTING_S3_BUCKET: true
-  LOCATION_BUCKET_REGION: ${{secrets.LOCATION_BUCKET_REGION}}
-  CONSUMPTION_CHECK_ENABLED: ${{secrets.CONSUMPTION_CHECK_ENABLED}}
-  CONNECTIVITY_SCHEDULER_ENABLED: ${{secrets.CONNECTIVITY_SCHEDULER_ENABLED}}
 
 jobs:
   analyse-services:
     uses: ./.github/workflows/analyse-services.yml
     with:
       base_sha: ${{inputs.base_sha}}
+      
+  service1:
+    name: service1
+    needs: analyse-services
+    if: "${{ needs.analyse-services.outputs.service1 == 'true' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: run step
+        run: echo "deploying service1"
+
+  service2:
+    name: service2
+    needs: analyse-services
+    if: "${{ needs.analyse-services.outputs.service2 == 'true' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: run step
+        run: echo "deploying service2"
