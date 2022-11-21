@@ -22,6 +22,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: general
+        id: changes-general
+        uses: tj-actions/changed-files@v33
+        with:
+          base_sha: ${{ inputs.base_sha }}
+          files: |
+            .github/**
+            services/**
+            common/**
+            data-layer/**
+            scripts/generate-config/**
+            package.json
+            package-lock.json
+
       - name: service1
         id: changes-service1
         uses: tj-actions/changed-files@v33
@@ -31,7 +45,10 @@ jobs:
             .github/**
             services/service1/**
             common/**
+            data-layer/**
+            scripts/generate-config/**
             package.json
+            package-lock.json
 
       - name: service2
         id: changes-service2
@@ -42,4 +59,7 @@ jobs:
             .github/**
             services/service2/**
             common/**
+            data-layer/**
+            scripts/generate-config/**
             package.json
+            package-lock.json
